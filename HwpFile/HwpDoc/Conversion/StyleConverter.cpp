@@ -235,7 +235,7 @@ CRunnerStyle CStyleConverter::GenerateRunnerStyle(const CHWPRecordCharShape& oCh
 	oRunnerStyle.SetAscii(oCharShape.GetFontName(ELang::LATIN));
 	oRunnerStyle.SetEastAsia(oCharShape.GetFontName(ELang::HANGUL));
 	oRunnerStyle.SetRatio(oCharShape.GetRatio(ELang::LATIN));
-	oRunnerStyle.SetSpacing(static_cast<short>((double)oCharShape.GetSpacing(ELang::LATIN) * SPACING_SCALE_MS_WORD));
+	oRunnerStyle.SetSpacing(static_cast<short>((double)oCharShape.GetSpacing(ELang::HANGUL) * SPACING_SCALE_MS_WORD));
 
 	if (oCharShape.Bold())
 		oRunnerStyle.SetBold(true);

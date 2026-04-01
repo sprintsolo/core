@@ -1249,7 +1249,7 @@ void CConverter2OOXML::WriteGeometryShape(const CCtrlGeneralShape* pGeneralShape
 	oBuilder.WriteString(L"<wps:bodyPr/>");
 
 	oBuilder.WriteString(L"</wps:wsp></a:graphicData></a:graphic>");
-	CloseDrawingNode(pGeneralShape, oBuilder);
+	CloseDrawingNode((nullptr != pContainer) ? pContainer : pGeneralShape, oBuilder);
 	oBuilder.WriteString(L"</mc:Choice></mc:AlternateContent></w:r>");
 }
 
