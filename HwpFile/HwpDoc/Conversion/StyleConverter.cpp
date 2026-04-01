@@ -171,6 +171,9 @@ CParagraphsStyle CStyleConverter::GenerateParagraphStyle(const CHWPRecordParaSha
 	if (oParaShape.KeepWithNext())
 		oParagraphsStyle.SetKeepNext(true);
 
+	if (oParaShape.GetPageBreakBefore())
+		oParagraphsStyle.SetPageBreakBefore(true);
+
 	oParagraphsStyle.SetFirstLine(oParaShape.GetIndent());
 	oParagraphsStyle.SetLeftInd(oParaShape.GetLeftIndent());
 	oParagraphsStyle.SetRightInd(oParaShape.GetRightIndent());
@@ -205,14 +208,14 @@ CParagraphsStyle CStyleConverter::GenerateParagraphStyle(const CHWPRecordParaSha
 		case 0x01:
 		{
 			oParagraphsStyle.SetSpacingLineRule(ELineRule::Exact);
-			oParagraphsStyle.SetSpacing(static_cast<int>((double)oParaShape.GetLineSpacing() / 10.)); /*0.352778*/; //(1pt=0.352778mm) //TODO:: проверить, как найдется пример
+			oParagraphsStyle.SetSpacing(Transform::HWPUINT2Twips(oParaShape.GetLineSpacing()));
 			break;
 		}
 		case 0x02:
 		case 0x03:
 		{
 			oParagraphsStyle.SetSpacingLineRule(ELineRule::AtLeast);
-			oParagraphsStyle.SetSpacing(static_cast<int>((double)oParaShape.GetLineSpacing() / 10.)); //TODO:: проверить, как найдется пример
+			oParagraphsStyle.SetSpacing(Transform::HWPUINT2Twips(oParaShape.GetLineSpacing()));
 			break;
 		}
 		default:
@@ -220,10 +223,10 @@ CParagraphsStyle CStyleConverter::GenerateParagraphStyle(const CHWPRecordParaSha
 	}
 
 	if (0 != oParaShape.GetMarginPrev())
-		oParagraphsStyle.SetSpacingBefore(static_cast<int>((double)oParaShape.GetMarginPrev() / 10.));
+		oParagraphsStyle.SetSpacingBefore(Transform::HWPUINT2Twips(oParaShape.GetMarginPrev()));
 
 	if (0 != oParaShape.GetMarginNext())
-		oParagraphsStyle.SetSpacingAfter(static_cast<int>((double)oParaShape.GetMarginNext() / 10.));
+		oParagraphsStyle.SetSpacingAfter(Transform::HWPUINT2Twips(oParaShape.GetMarginNext()));
 
 	return oParagraphsStyle;
 }
@@ -234,7 +237,7 @@ CRunnerStyle CStyleConverter::GenerateRunnerStyle(const CHWPRecordCharShape& oCh
 
 	oRunnerStyle.SetAscii(oCharShape.GetFontName(ELang::LATIN));
 	oRunnerStyle.SetEastAsia(oCharShape.GetFontName(ELang::HANGUL));
-	oRunnerStyle.SetRatio(oCharShape.GetRatio(ELang::LATIN));
+	oRunnerStyle.SetRatio(oCharShape.GetRatio(ELang::HANGUL));
 	oRunnerStyle.SetSpacing(static_cast<short>((double)oCharShape.GetSpacing(ELang::HANGUL) * SPACING_SCALE_MS_WORD));
 
 	if (oCharShape.Bold())
@@ -308,6 +311,9 @@ void CStyleConverter::WriteParagraphProperties(const CParagraphsStyle& oParagrap
 	if (oParagraphsStyle.KeepNextIsSet() && oParagraphsStyle.KeepNext())
 		oBuilder.WriteString(L"<w:keepNext w:val=\"true\"/>");
 
+	if (oParagraphsStyle.PageBreakBeforeIsSet() && oParagraphsStyle.PageBreakBefore())
+		oBuilder.WriteString(L"<w:pageBreakBefore/>");
+
 	if ((oParagraphsStyle.FirstLineIsSet() && 0 != oParagraphsStyle.GetFirstLine()) ||
 	    (oParagraphsStyle.LeftIndIsSet() && 0 != oParagraphsStyle.GetLeftInd()) ||
 	    (oParagraphsStyle.RightIndIsSet() && 0 != oParagraphsStyle.GetRightInd()))
@@ -320,24 +326,24 @@ void CStyleConverter::WriteParagraphProperties(const CParagraphsStyle& oParagrap
 		{
 			if (oParagraphsStyle.GetFirstLine() > 0)
 			{
-				oBuilder.WriteString(L" w:firstLine=\"" + std::to_wstring(static_cast<int>(std::round(oParagraphsStyle.GetFirstLine() / 10.))) + L"\"");
+				oBuilder.WriteString(L" w:firstLine=\"" + std::to_wstring(Transform::HWPUINT2Twips(oParagraphsStyle.GetFirstLine())) + L"\"");
 
 				if (0 != nLeftInd)
-					oBuilder.WriteString(L" w:left=\"" + std::to_wstring(static_cast<int>(std::round(nLeftInd / 10.))) + L"\"");
+					oBuilder.WriteString(L" w:left=\"" + std::to_wstring(Transform::HWPUINT2Twips(nLeftInd)) + L"\"");
 			}
 			else
 			{
-				const int nHanging{static_cast<int>(std::round(-oParagraphsStyle.GetFirstLine() / 10.))};
+				const int nHanging{Transform::HWPUINT2Twips(-oParagraphsStyle.GetFirstLine())};
 
 				oBuilder.WriteString(L" w:hanging=\"" + std::to_wstring(nHanging) + L"\"");
-				oBuilder.WriteString(L" w:left=\"" + std::to_wstring(static_cast<int>(std::round(nLeftInd / 10.)) + nHanging) + L"\"");
+				oBuilder.WriteString(L" w:left=\"" + std::to_wstring(Transform::HWPUINT2Twips(nLeftInd) + nHanging) + L"\"");
 			}
 		}
 		else if (0 != nLeftInd)
-			oBuilder.WriteString(L" w:left=\"" + std::to_wstring(static_cast<int>(std::round(oParagraphsStyle.GetLeftInd() / 10.))) + L"\"");
+			oBuilder.WriteString(L" w:left=\"" + std::to_wstring(Transform::HWPUINT2Twips(oParagraphsStyle.GetLeftInd())) + L"\"");
 
 		if (oParagraphsStyle.RightIndIsSet() && 0 != oParagraphsStyle.GetRightInd())
-			oBuilder.WriteString(L" w:right=\"" + std::to_wstring(static_cast<int>(std::round(oParagraphsStyle.GetRightInd() / 10.))) + L"\"");
+			oBuilder.WriteString(L" w:right=\"" + std::to_wstring(Transform::HWPUINT2Twips(oParagraphsStyle.GetRightInd())) + L"\"");
 
 		oBuilder.WriteString(L"/>");
 	}
@@ -579,8 +585,9 @@ CParagraphsStyle& CParagraphsStyle::operator-=(const CParagraphsStyle& oParagrap
 	if (Empty() || oParagraphStyle.Empty())
 		return *this;
 
-	m_bKeepNext      -= oParagraphStyle.m_bKeepNext;
-	m_oInd           -= oParagraphStyle.m_oInd;
+	m_bKeepNext         -= oParagraphStyle.m_bKeepNext;
+	m_bPageBreakBefore  -= oParagraphStyle.m_bPageBreakBefore;
+	m_oInd              -= oParagraphStyle.m_oInd;
 	m_eJs            -= oParagraphStyle.m_eJs;
 	m_eTextAlignment -= oParagraphStyle.m_eTextAlignment;
 	m_oSpacing       -= oParagraphStyle.m_oSpacing;
@@ -591,6 +598,7 @@ CParagraphsStyle& CParagraphsStyle::operator-=(const CParagraphsStyle& oParagrap
 void CParagraphsStyle::Clear()
 {
 	m_bKeepNext.UnSet();
+	m_bPageBreakBefore.UnSet();
 	m_eJs.UnSet();
 	m_eTextAlignment.UnSet();
 
@@ -606,7 +614,7 @@ void CParagraphsStyle::Clear()
 
 bool CParagraphsStyle::Empty() const
 {
-	return !m_bKeepNext.IsSet() && !m_oInd.m_nFirstLine.IsSet() && !m_oInd.m_nLeft.IsSet() &&
+	return !m_bKeepNext.IsSet() && !m_bPageBreakBefore.IsSet() && !m_oInd.m_nFirstLine.IsSet() && !m_oInd.m_nLeft.IsSet() &&
 	       !m_oInd.m_nRight.IsSet() && !m_eJs.IsSet() && !m_eTextAlignment.IsSet() &&
 	       !m_oSpacing.m_eLineRule.IsSet() && !m_oSpacing.m_nLine.IsSet() &&
 	       !m_oSpacing.m_nAfter.IsSet() && !m_oSpacing.m_nBefore.IsSet();
@@ -641,6 +649,7 @@ bool CParagraphsStyle::Empty() const
 	}
 
 CREATE_BODY_METHODS_FOR_PROPERTY_BOOL(CParagraphsStyle, KeepNext, m_bKeepNext)
+CREATE_BODY_METHODS_FOR_PROPERTY_BOOL(CParagraphsStyle, PageBreakBefore, m_bPageBreakBefore)
 CREATE_BODY_METHODS_FOR_PROPERTY(CParagraphsStyle, int, FirstLine, m_oInd.m_nFirstLine)
 CREATE_BODY_METHODS_FOR_PROPERTY(CParagraphsStyle, int, LeftInd, m_oInd.m_nLeft)
 CREATE_BODY_METHODS_FOR_PROPERTY(CParagraphsStyle, int, RightInd, m_oInd.m_nRight)

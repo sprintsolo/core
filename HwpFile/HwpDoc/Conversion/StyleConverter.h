@@ -94,6 +94,7 @@ public:
 	bool Empty() const;
 
 	CREATE_METHODS_FOR_PROPERTY_BOOL(KeepNext);
+	CREATE_METHODS_FOR_PROPERTY_BOOL(PageBreakBefore);
 	CREATE_METHODS_FOR_PROPERTY(int, Ind);
 	CREATE_METHODS_FOR_PROPERTY(EJs, Js);
 	CREATE_METHODS_FOR_PROPERTY(ETextAlignment, TextAlignment);
@@ -106,6 +107,7 @@ public:
 	CREATE_METHODS_FOR_PROPERTY(int, SpacingAfter);
 private:
 	CProperty<bool> m_bKeepNext;
+	CProperty<bool> m_bPageBreakBefore;
 	TInd m_oInd;
 	CProperty<EJs> m_eJs;
 	CProperty<ETextAlignment> m_eTextAlignment;
