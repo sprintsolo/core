@@ -803,6 +803,19 @@ void CConverter2OOXML::WriteTable(const CCtrlTable* pTable, short shParaShapeID,
 	//TODO:: в случаях, когда есть пустые столбцы необходимо добавить возможность удаления данных столбцов
 	// Например для матрицы 3x2, у которой значения есть только в 2x2, необходимо удалить последний столбец
 
+	// Write tblGrid based on first row cell widths
+	if (pTable->GetRows() > 0 && pTable->GetCols() > 0)
+	{
+		oBuilder.WriteString(L"<w:tblGrid>");
+		for (unsigned int unColIndex = 0; unColIndex < pTable->GetCols(); ++unColIndex)
+		{
+			const auto& oValue = m_arrCells[0][unColIndex];
+			if (nullptr != oValue.second)
+				oBuilder.WriteString(L"<w:gridCol w:w=\"" + std::to_wstring(Transform::HWPUINT2Twips(oValue.second->GetWidth())) + L"\"/>");
+		}
+		oBuilder.WriteString(L"</w:tblGrid>");
+	}
+
 	for (unsigned int unRowIndex = 0; unRowIndex < pTable->GetRows(); ++unRowIndex)
 	{
 		oBuilder.WriteString(L"<w:tr>");
@@ -851,8 +864,10 @@ void CConverter2OOXML::WriteTableProperties(const CCtrlTable* pTable, short shPa
 
 	oBuilder.WriteString(L"<w:tblPr>");
 
-	// TODO:: сделать вычисление
-	oBuilder.WriteString(L"<w:tblW w:w=\"0\" w:type=\"auto\"/>");
+	if (0 != pTable->GetWidth())
+		oBuilder.WriteString(L"<w:tblW w:w=\"" + std::to_wstring(Transform::HWPUINT2Twips(pTable->GetWidth())) + L"\" w:type=\"dxa\"/>");
+	else
+		oBuilder.WriteString(L"<w:tblW w:w=\"0\" w:type=\"auto\"/>");
 
 	if (0 != pTable->GetInLSpace() || 0 != pTable->GetInTSpace() ||
 	    0 != pTable->GetInRSpace() || 0 != pTable->GetInBSpace())
