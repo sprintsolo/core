@@ -830,7 +830,7 @@ void CConverter2OOXML::WriteTable(const CCtrlTable* pTable, short shParaShapeID,
 		}
 
 		oBuilder.WriteString(L"<w:trPr>");
-		oBuilder.WriteString(L"<w:trHeight w:val=\"" + std::to_wstring(Transform::HWPUINT2Twips(nHeight)) + L"\"/>");
+		oBuilder.WriteString(L"<w:trHeight w:val=\"" + std::to_wstring(Transform::HWPUINT2Twips(nHeight)) + L"\" w:hRule=\"exact\"/>");
 		oBuilder.WriteString(L"</w:trPr>");
 
 		for (unsigned int unColIndex  = 0; unColIndex < pTable->GetCols(); ++unColIndex)
