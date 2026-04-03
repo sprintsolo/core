@@ -11,6 +11,32 @@ namespace HWP
 #define DEFAULT_STYLE_NAME L"Style"
 #define DEFAULT_SPACING 240
 
+static std::wstring MapKoreanFontName(const std::wstring& wsName)
+{
+	// Map commercial Korean font names to freely available alternatives
+	// Gothic/Sans-serif family
+	if (wsName == L"돋움" || wsName == L"돋움체" || wsName == L"맑은 고딕" ||
+	    wsName == L"한양중고딕" || wsName == L"한양견고딕" || wsName == L"한컴 윤고딕 240" ||
+	    wsName == L"휴먼고딕" || wsName == L"산돌고딕 M" || wsName == L"산돌고딕 L" ||
+	    wsName == L"신명 태고딕" || wsName == L"HY견고딕" || wsName == L"-윤고딕120" ||
+	    wsName == L"-윤고딕140" || wsName == L"-윤고딕330")
+		return L"Noto Sans CJK KR";
+
+	// Myeongjo/Serif family
+	if (wsName == L"휴먼명조" || wsName == L"한양신명조" || wsName == L"바탕" ||
+	    wsName == L"바탕체" || wsName == L"한컴바탕" || wsName == L"함초롬바탕" ||
+	    wsName == L"HY신명조" || wsName == L"#신명조" || wsName == L"명조" ||
+	    wsName == L"신명 견명조" || wsName == L"신명 신문명조" || wsName == L"신명 신명조" ||
+	    wsName == L"-윤명조150" || wsName == L"Yoon가변 윤명조 420_TT")
+		return L"Noto Serif CJK KR";
+
+	// Gulim/Rounded
+	if (wsName == L"굴림" || wsName == L"굴림체")
+		return L"Noto Sans CJK KR";
+
+	return wsName;
+}
+
 #define SPACING_SCALE_MS_WORD 1.21
 
 #define ADD_COLOR(r, g, b, enum_value) {{r, g, b}, enum_value}
@@ -235,8 +261,8 @@ CRunnerStyle CStyleConverter::GenerateRunnerStyle(const CHWPRecordCharShape& oCh
 {
 	CRunnerStyle oRunnerStyle;
 
-	oRunnerStyle.SetAscii(oCharShape.GetFontName(ELang::LATIN));
-	oRunnerStyle.SetEastAsia(oCharShape.GetFontName(ELang::HANGUL));
+	oRunnerStyle.SetAscii(MapKoreanFontName(oCharShape.GetFontName(ELang::LATIN)));
+	oRunnerStyle.SetEastAsia(MapKoreanFontName(oCharShape.GetFontName(ELang::HANGUL)));
 	oRunnerStyle.SetRatio(oCharShape.GetRatio(ELang::HANGUL));
 	oRunnerStyle.SetSpacing(static_cast<short>((double)oCharShape.GetSpacing(ELang::HANGUL) * SPACING_SCALE_MS_WORD));
 
