@@ -13,26 +13,33 @@ namespace HWP
 
 static std::wstring MapKoreanFontName(const std::wstring& wsName)
 {
-	// Map commercial Korean font names to freely available alternatives
-	// Gothic/Sans-serif family
-	if (wsName == L"돋움" || wsName == L"돋움체" || wsName == L"맑은 고딕" ||
-	    wsName == L"한양중고딕" || wsName == L"한양견고딕" || wsName == L"한컴 윤고딕 240" ||
-	    wsName == L"휴먼고딕" || wsName == L"산돌고딕 M" || wsName == L"산돌고딕 L" ||
-	    wsName == L"신명 태고딕" || wsName == L"HY견고딕" || wsName == L"-윤고딕120" ||
-	    wsName == L"-윤고딕140" || wsName == L"-윤고딕330")
-		return L"Noto Sans CJK KR";
+	// Map Korean font names to their English equivalents
+	// (OnlyOffice AllFonts.js registers fonts by English names)
+	// Dotum family (Gothic/Sans-serif)
+	if (wsName == L"돋움")   return L"Dotum";
+	if (wsName == L"돋움체") return L"DotumChe";
 
-	// Myeongjo/Serif family
-	if (wsName == L"휴먼명조" || wsName == L"한양신명조" || wsName == L"바탕" ||
-	    wsName == L"바탕체" || wsName == L"한컴바탕" || wsName == L"함초롬바탕" ||
-	    wsName == L"HY신명조" || wsName == L"#신명조" || wsName == L"명조" ||
-	    wsName == L"신명 견명조" || wsName == L"신명 신문명조" || wsName == L"신명 신명조" ||
-	    wsName == L"-윤명조150" || wsName == L"Yoon가변 윤명조 420_TT")
-		return L"Noto Serif CJK KR";
+	// Gulim family
+	if (wsName == L"굴림")   return L"Gulim";
+	if (wsName == L"굴림체") return L"GulimChe";
 
-	// Gulim/Rounded
-	if (wsName == L"굴림" || wsName == L"굴림체")
-		return L"Noto Sans CJK KR";
+	// Batang family (Serif/Myeongjo)
+	if (wsName == L"바탕" || wsName == L"바탕체") return L"Batang";
+
+	// Map other commercial Korean fonts to available alternatives
+	// Gothic/Sans-serif → Dotum
+	if (wsName == L"맑은 고딕" || wsName == L"한양중고딕" || wsName == L"한양견고딕" ||
+	    wsName == L"한컴 윤고딕 240" || wsName == L"휴먼고딕" || wsName == L"산돌고딕 M" ||
+	    wsName == L"산돌고딕 L" || wsName == L"신명 태고딕" || wsName == L"HY견고딕" ||
+	    wsName == L"-윤고딕120" || wsName == L"-윤고딕140" || wsName == L"-윤고딕330")
+		return L"Dotum";
+
+	// Myeongjo/Serif → Batang
+	if (wsName == L"휴먼명조" || wsName == L"한양신명조" || wsName == L"한컴바탕" ||
+	    wsName == L"함초롬바탕" || wsName == L"HY신명조" || wsName == L"#신명조" ||
+	    wsName == L"명조" || wsName == L"신명 견명조" || wsName == L"신명 신문명조" ||
+	    wsName == L"신명 신명조" || wsName == L"-윤명조150" || wsName == L"Yoon가변 윤명조 420_TT")
+		return L"Batang";
 
 	return wsName;
 }
@@ -582,7 +589,7 @@ bool CStyleConverter::SaveToFile(const std::wstring& wsDirectory)
 
 	oStylesWriter.WriteStringUTF8(L"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:styles xmlns:mc=\"http://schemas.openxmlformats.org/markup-compatibility/2006\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:w14=\"http://schemas.microsoft.com/office/word/2010/wordml\" xmlns:w15=\"http://schemas.microsoft.com/office/word/2012/wordml\" mc:Ignorable=\"w14 w15\">");
 	oStylesWriter.WriteStringUTF8(L"<w:rPrDefault><w:rPr>");
-	oStylesWriter.WriteStringUTF8(L"<w:rFonts w:ascii=\"" + DEFAULT_FONT_FAMILY + L"\" w:eastAsia=\"Malgun Gothic\"  w:hAnsi=\"" + DEFAULT_FONT_FAMILY + L"\" w:cs=\"" + DEFAULT_FONT_FAMILY + L"\"/>");
+	oStylesWriter.WriteStringUTF8(L"<w:rFonts w:ascii=\"" + DEFAULT_FONT_FAMILY + L"\" w:eastAsia=\"Dotum\"  w:hAnsi=\"" + DEFAULT_FONT_FAMILY + L"\" w:cs=\"" + DEFAULT_FONT_FAMILY + L"\"/>");
 	oStylesWriter.WriteStringUTF8(L"<w:sz w:val=\"" + std::to_wstring(DEFAULT_FONT_SIZE) + L"\"/><w:szCs w:val=\"" + std::to_wstring(DEFAULT_FONT_SIZE) + L"\"/>");
 	oStylesWriter.WriteStringUTF8(L"<w:lang w:val=\"ko-KR\" w:eastAsia=\"ko-KR\" w:bidi=\"ar-SA\"/>");
 	oStylesWriter.WriteStringUTF8(L"</w:rPr></w:rPrDefault><w:pPrDefault/>");
