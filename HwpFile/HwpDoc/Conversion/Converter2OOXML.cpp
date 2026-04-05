@@ -1452,10 +1452,11 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	oBuilder.WriteString(L"<pic:blipFill><a:blip r:embed=\"" + sPictureID + L"\">");
 
 	// Apply image effects (0=RealPic, 1=GrayScale, 2=BlackWhite)
-	if (1 == pCtrlPic->GetImageEffect())
-		oBuilder.WriteString(L"<a:grayscl/>");
-	else if (2 == pCtrlPic->GetImageEffect())
-		oBuilder.WriteString(L"<a:grayscl/>");  // BlackWhite approximated as grayscale
+	if (1 == pCtrlPic->GetImageEffect() || 2 == pCtrlPic->GetImageEffect())
+	{
+		// Use both grayscl and duotone for broader renderer compatibility
+		oBuilder.WriteString(L"<a:duotone><a:prstClr val=\"black\"/><a:prstClr val=\"white\"/></a:duotone>");
+	}
 
 	oBuilder.WriteString(L"<a:extLst><a:ext uri=\"{28A0092B-C50C-407E-A947-70E740481C1C}\"><a14:useLocalDpi xmlns:a14=\"http://schemas.microsoft.com/office/drawing/2010/main\" val=\"0\"/></a:ext></a:extLst></a:blip><a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>");
 	oBuilder.WriteString(L"<pic:spPr bwMode=\"auto\">");
@@ -1466,7 +1467,18 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	if (pCtrlPic->VertFlip())
 		oBuilder.WriteString(L" flipV=\"1\"");
 
-	oBuilder.WriteString(L"><a:off x=\"0\" y=\"0\"/><a:ext cx=\"" + std::to_wstring(pCtrlPic->GetFinalWidth()) + L"\" cy=\"" + std::to_wstring(pCtrlPic->GetFinalHeight()) + L"\"/></a:xfrm>");
+	{
+		// Apply transformation matrix to get actual display size
+		double dW = (double)pCtrlPic->GetFinalWidth();
+		double dH = (double)pCtrlPic->GetFinalHeight();
+		const TMatrix oMatrix{pCtrlPic->GetFinalMatrix()};
+		// Scale width and height through the matrix (ignore translation)
+		double dW2 = dW * oMatrix.m_dM11 + dH * oMatrix.m_dM21;
+		double dH2 = dW * oMatrix.m_dM12 + dH * oMatrix.m_dM22;
+		const int nPicWidth  = Transform::HWPUINT2OOXML((int)std::abs(dW2));
+		const int nPicHeight = Transform::HWPUINT2OOXML((int)std::abs(dH2));
+		oBuilder.WriteString(L"><a:off x=\"0\" y=\"0\"/><a:ext cx=\"" + std::to_wstring(nPicWidth) + L"\" cy=\"" + std::to_wstring(nPicHeight) + L"\"/></a:xfrm>");
+	}
 	oBuilder.WriteString(L"<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/>");
 	WriteBorderSettings(pCtrlPic, oBuilder);
 	oBuilder.WriteString(L"</pic:spPr></pic:pic></a:graphicData></a:graphic>");
@@ -1748,10 +1760,20 @@ void CConverter2OOXML::WriteShapeExtent(const CCtrlObjElement* pCtrlShape, NSStr
 	if (nullptr == pCtrlShape)
 		return;
 
-	const int nFinalWidth  = std::abs(pCtrlShape->GetFinalWidth());
-	const int nFinalHeight = std::abs(pCtrlShape->GetFinalHeight());
+	double dW = (double)std::abs(pCtrlShape->GetFinalWidth());
+	double dH = (double)std::abs(pCtrlShape->GetFinalHeight());
 
-	oBuilder.WriteString(L"<wp:extent cx=\"" + std::to_wstring(Transform::HWPUINT2OOXML(nFinalWidth)) + L"\" cy=\"" + std::to_wstring(Transform::HWPUINT2OOXML(nFinalHeight)) + L"\"/>");
+	// Apply transformation matrix to get actual display size
+	const TMatrix oMatrix{pCtrlShape->GetFinalMatrix()};
+	if (0 != oMatrix.m_dM11 || 0 != oMatrix.m_dM22)
+	{
+		double dW2 = dW * oMatrix.m_dM11 + dH * oMatrix.m_dM21;
+		double dH2 = dW * oMatrix.m_dM12 + dH * oMatrix.m_dM22;
+		dW = std::abs(dW2);
+		dH = std::abs(dH2);
+	}
+
+	oBuilder.WriteString(L"<wp:extent cx=\"" + std::to_wstring(Transform::HWPUINT2OOXML((int)dW)) + L"\" cy=\"" + std::to_wstring(Transform::HWPUINT2OOXML((int)dH)) + L"\"/>");
 	oBuilder.WriteString(L"<wp:effectExtent l=\"0\" t=\"0\" r=\"0\" b=\"0\"/>");
 }
 
