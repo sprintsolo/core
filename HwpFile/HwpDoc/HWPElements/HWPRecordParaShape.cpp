@@ -438,6 +438,7 @@ void CHWPRecordParaShape::RecursiveParaShape(CXMLReader& oReader)
 			m_nMarginNext = oReader.GetAttributeInt("value");
 		else if ("hh:margin"  == sNodeName ||
 		         "hp:switch"  == sNodeName ||
+		         "hp:case"    == sNodeName ||
 		         "hp:default" == sNodeName)
 			RecursiveParaShape(oReader);
 	}
