@@ -471,6 +471,11 @@ HWP_STRING CCtrlShapePic::GetBinDataID() const
 	return m_sBinDataID;
 }
 
+HWP_BYTE CCtrlShapePic::GetImageEffect() const
+{
+	return m_chEffect;
+}
+
 int CCtrlShapePic::GetPicWidth() const
 {
 	return m_nIniPicWidth;

@@ -1449,7 +1449,15 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	oBuilder.WriteString(L"<pic:pic xmlns:pic=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">");
 	oBuilder.WriteString(L"<pic:nvPicPr><pic:cNvPr id=\"" + std::to_wstring(m_ushShapeCount) + L"\" name=\"Shape " + std::to_wstring(m_ushShapeCount) + L"\"/>");
 	oBuilder.WriteString(L"<pic:cNvPicPr/></pic:nvPicPr>");
-	oBuilder.WriteString(L"<pic:blipFill><a:blip r:embed=\"" + sPictureID + L"\"><a:extLst><a:ext uri=\"{28A0092B-C50C-407E-A947-70E740481C1C}\"><a14:useLocalDpi xmlns:a14=\"http://schemas.microsoft.com/office/drawing/2010/main\" val=\"0\"/></a:ext></a:extLst></a:blip><a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>");
+	oBuilder.WriteString(L"<pic:blipFill><a:blip r:embed=\"" + sPictureID + L"\">");
+
+	// Apply image effects (0=RealPic, 1=GrayScale, 2=BlackWhite)
+	if (1 == pCtrlPic->GetImageEffect())
+		oBuilder.WriteString(L"<a:grayscl/>");
+	else if (2 == pCtrlPic->GetImageEffect())
+		oBuilder.WriteString(L"<a:grayscl/>");  // BlackWhite approximated as grayscale
+
+	oBuilder.WriteString(L"<a:extLst><a:ext uri=\"{28A0092B-C50C-407E-A947-70E740481C1C}\"><a14:useLocalDpi xmlns:a14=\"http://schemas.microsoft.com/office/drawing/2010/main\" val=\"0\"/></a:ext></a:extLst></a:blip><a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>");
 	oBuilder.WriteString(L"<pic:spPr bwMode=\"auto\">");
 
 	oBuilder.WriteString(L"<a:xfrm");
@@ -1458,7 +1466,7 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	if (pCtrlPic->VertFlip())
 		oBuilder.WriteString(L" flipV=\"1\"");
 
-	oBuilder.WriteString(L"><a:off x=\"0\" y=\"0\"/><a:ext cx=\"" + std::to_wstring(pCtrlPic->GetFinalWidth()) + L"\" cy=\"" + std::to_wstring(pCtrlPic->GetFinalHeight()) + L"\"/></a:xfrm>");
+	oBuilder.WriteString(L"><a:off x=\"0\" y=\"0\"/><a:ext cx=\"" + std::to_wstring(Transform::HWPUINT2OOXML(pCtrlPic->GetFinalWidth())) + L"\" cy=\"" + std::to_wstring(Transform::HWPUINT2OOXML(pCtrlPic->GetFinalHeight())) + L"\"/></a:xfrm>");
 	oBuilder.WriteString(L"<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/>");
 	WriteBorderSettings(pCtrlPic, oBuilder);
 	oBuilder.WriteString(L"</pic:spPr></pic:pic></a:graphicData></a:graphic>");

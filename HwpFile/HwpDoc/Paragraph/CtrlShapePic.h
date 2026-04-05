@@ -149,6 +149,7 @@ public:
 	HWP_STRING GetBinDataID() const;
 	int GetPicWidth() const;
 	int GetPicHeight() const;
+	HWP_BYTE GetImageEffect() const;  // 0=RealPic, 1=GrayScale, 2=BlackWhite
 
 	ELineStyle2 GetBorderLineStyle() const;
 	HWP_BYTE GetBorderCompoundLineType() const;
