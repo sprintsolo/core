@@ -1535,7 +1535,7 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	oBuilder.WriteString(L"<w:r><w:rPr><w:noProof/></w:rPr>");
 
 	// Use container's positioning when picture is inside a group
-	OpenDrawingNode((nullptr != pContainer) ? pContainer : pCtrlPic, oBuilder);
+	OpenDrawingNode((nullptr != pContainer) ? static_cast<const CCtrlObjElement*>(pContainer) : static_cast<const CCtrlObjElement*>(pCtrlPic), oBuilder);
 
 	oBuilder.WriteString(L"<a:graphic xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">");
 	oBuilder.WriteString(L"<a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">");
@@ -1582,7 +1582,7 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	oBuilder.WriteString(L"<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/>");
 	WriteBorderSettings(pCtrlPic, oBuilder);
 	oBuilder.WriteString(L"</pic:spPr></pic:pic></a:graphicData></a:graphic>");
-	CloseDrawingNode((nullptr != pContainer) ? pContainer : pCtrlPic, oBuilder);
+	CloseDrawingNode((nullptr != pContainer) ? static_cast<const CCtrlObjElement*>(pContainer) : static_cast<const CCtrlObjElement*>(pCtrlPic), oBuilder);
 	oBuilder.WriteString(L"</w:r>");
 }
 
