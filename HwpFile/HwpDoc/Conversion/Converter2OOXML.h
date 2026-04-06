@@ -106,7 +106,7 @@ class CConverter2OOXML
 	void WriteContainer(const CCtrlContainer* pContainer, short shParaShapeID, short shParaStyleID, NSStringUtils::CStringBuilder& oBuilder, TConversionState& oState);
 
 	void WriteSectionSettings(TConversionState& oState);
-	void WritePicture(const CCtrlShapePic* pCtrlPic, short shParaShapeID, short shParaStyleID, NSStringUtils::CStringBuilder& oBuilder, TConversionState& oState);
+	void WritePicture(const CCtrlShapePic* pCtrlPic, short shParaShapeID, short shParaStyleID, NSStringUtils::CStringBuilder& oBuilder, TConversionState& oState, const CCtrlContainer* pContainer = nullptr);
 	void WriteVideo(const CCtrlShapeVideo* pCtrlVideo, short shParaShapeID, short shParaStyleID, NSStringUtils::CStringBuilder& oBuilder, TConversionState& oState);
 	bool SaveSVGFile(const HWP_STRING& sSVG, HWP_STRING& sFileName);
 	HWP_STRING SavePicture(const HWP_STRING& sBinItemId, TConversionState& oState);

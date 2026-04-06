@@ -437,10 +437,45 @@ void CHWPRecordParaShape::RecursiveParaShape(CXMLReader& oReader)
 		else if ("hc:next" == sNodeName)
 			m_nMarginNext = oReader.GetAttributeInt("value");
 		else if ("hh:margin"  == sNodeName ||
-		         "hp:switch"  == sNodeName ||
 		         "hp:case"    == sNodeName ||
 		         "hp:default" == sNodeName)
 			RecursiveParaShape(oReader);
+		else if ("hp:switch" == sNodeName)
+		{
+			// Parse hp:switch: prefer hp:case over hp:default
+			// Save current margin/spacing values before parsing switch
+			const int nSaveIndent       = m_nIndent;
+			const int nSaveMarginLeft   = m_nMarginLeft;
+			const int nSaveMarginRight  = m_nMarginRight;
+			const int nSaveMarginPrev   = m_nMarginPrev;
+			const int nSaveMarginNext   = m_nMarginNext;
+			const int nSaveLineSpacing  = m_nLineSpacing;
+			const int nSaveLineSpType   = m_nLineSpacingType;
+
+			bool bCaseParsed = false;
+			WHILE_READ_NEXT_NODE_WITH_NAME(oReader)
+			{
+				if ("hp:case" == sNodeName && !bCaseParsed)
+				{
+					// Reset to saved values before parsing case
+					m_nIndent          = nSaveIndent;
+					m_nMarginLeft      = nSaveMarginLeft;
+					m_nMarginRight     = nSaveMarginRight;
+					m_nMarginPrev      = nSaveMarginPrev;
+					m_nMarginNext      = nSaveMarginNext;
+					m_nLineSpacing     = nSaveLineSpacing;
+					m_nLineSpacingType = nSaveLineSpType;
+					RecursiveParaShape(oReader);
+					bCaseParsed = true;
+				}
+				else if ("hp:default" == sNodeName && !bCaseParsed)
+				{
+					RecursiveParaShape(oReader);
+				}
+				// else: skip additional hp:case or hp:default if case already parsed
+			}
+			END_WHILE
+		}
 	}
 	END_WHILE
 }

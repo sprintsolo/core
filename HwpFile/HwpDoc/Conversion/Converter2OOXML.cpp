@@ -10,6 +10,7 @@
 #include "../../../DesktopEditor/graphics/pro/Image.h"
 
 #include "../Paragraph/ParaText.h"
+#include "../Paragraph/CtrlCharacter.h"
 #include "../Paragraph/CtrlTable.h"
 #include "../Paragraph/CtrlEqEdit.h"
 #include "../Paragraph/CtrlShapeArc.h"
@@ -356,7 +357,7 @@ void CConverter2OOXML::WriteShape(const CCtrlGeneralShape* pShape, short shParaS
 		}
 		case EShapeType::Pic:
 		{
-			WritePicture((const CCtrlShapePic*)pShape, shParaShapeID, shParaStyleID, oBuilder, oState);
+			WritePicture((const CCtrlShapePic*)pShape, shParaShapeID, shParaStyleID, oBuilder, oState, pContainer);
 			break;
 		}
 		case EShapeType::EqEdit:
@@ -554,6 +555,7 @@ void CConverter2OOXML::WriteParagraph(const CHWPPargraph* pParagraph, NSStringUt
 	oState.m_nParaFontHeight = 0;
 	if (nullptr != m_pContext)
 	{
+		int nFallbackHeight = 0;
 		for (const CCtrl* pCtrl : pParagraph->GetCtrls())
 		{
 			if (ECtrlObjectType::ParaText == pCtrl->GetCtrlType())
@@ -566,7 +568,18 @@ void CConverter2OOXML::WriteParagraph(const CHWPPargraph* pParagraph, NSStringUt
 					break;
 				}
 			}
+			else if (ECtrlObjectType::Character == pCtrl->GetCtrlType() && 0 == nFallbackHeight)
+			{
+				// Fallback: use char shape from paragraph break character (for empty paragraphs)
+				const int nCharShapeID = ((const CCtrlCharacter*)pCtrl)->GetCharShapeId();
+				const CHWPRecordCharShape* pCharShape = dynamic_cast<const CHWPRecordCharShape*>(m_pContext->GetCharShape(nCharShapeID));
+				if (nullptr != pCharShape && 0 != pCharShape->GetHeight())
+					nFallbackHeight = pCharShape->GetHeight();
+			}
 		}
+
+		if (0 == oState.m_nParaFontHeight && 0 != nFallbackHeight)
+			oState.m_nParaFontHeight = nFallbackHeight;
 	}
 
 	for (const CCtrl* pCtrl : pParagraph->GetCtrls())
@@ -1503,7 +1516,7 @@ void CConverter2OOXML::WriteSectionSettings(TConversionState& oState)
 	m_oDocXml.WriteString(L"</w:sectPr>");
 }
 
-void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaShapeId, short shParaStyleID, NSStringUtils::CStringBuilder& oBuilder, TConversionState& oState)
+void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaShapeId, short shParaStyleID, NSStringUtils::CStringBuilder& oBuilder, TConversionState& oState, const CCtrlContainer* pContainer)
 {
 	if (nullptr == pCtrlPic)
 		return;
@@ -1521,7 +1534,8 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 
 	oBuilder.WriteString(L"<w:r><w:rPr><w:noProof/></w:rPr>");
 
-	OpenDrawingNode(pCtrlPic, oBuilder);
+	// Use container's positioning when picture is inside a group
+	OpenDrawingNode((nullptr != pContainer) ? pContainer : pCtrlPic, oBuilder);
 
 	oBuilder.WriteString(L"<a:graphic xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">");
 	oBuilder.WriteString(L"<a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/picture\">");
@@ -1568,7 +1582,7 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	oBuilder.WriteString(L"<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/>");
 	WriteBorderSettings(pCtrlPic, oBuilder);
 	oBuilder.WriteString(L"</pic:spPr></pic:pic></a:graphicData></a:graphic>");
-	CloseDrawingNode(pCtrlPic, oBuilder);
+	CloseDrawingNode((nullptr != pContainer) ? pContainer : pCtrlPic, oBuilder);
 	oBuilder.WriteString(L"</w:r>");
 }
 

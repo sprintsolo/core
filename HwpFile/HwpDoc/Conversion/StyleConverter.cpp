@@ -107,11 +107,14 @@ std::wstring CStyleConverter::CreateStyle(short shParaShapeId, short shParaStyle
 	m_oStylesXml.WriteEncodeXmlString(wsStyleName);
 	m_oStylesXml.WriteString(L"\"/>");
 	m_oStylesXml.WriteString(L"<w:qFormat/>");
-	m_oStylesXml.WriteString(L"<w:pPr>");
-	WriteParagraphProperties(GenerateParagraphStyle(*pParaShapeRecord), m_oStylesXml);
-	m_oStylesXml.WriteString(L"</w:pPr>");
-
 	const CHWPRecordCharShape *pCharShapeRecord = dynamic_cast<const CHWPRecordCharShape*>(oContext.GetCharShape(pParaStyle->GetCharShapeId()));
+
+	// Use style's char shape font height for accurate line spacing in styles
+	const int nStyleFontHeight = (nullptr != pCharShapeRecord) ? pCharShapeRecord->GetHeight() : 0;
+
+	m_oStylesXml.WriteString(L"<w:pPr>");
+	WriteParagraphProperties(GenerateParagraphStyle(*pParaShapeRecord, nStyleFontHeight), m_oStylesXml);
+	m_oStylesXml.WriteString(L"</w:pPr>");
 
 	if (nullptr != pCharShapeRecord)
 	{
@@ -142,7 +145,7 @@ bool CStyleConverter::WriteDifferenceParagraphStyles(short shFirtsParaShapeId, s
 	if (nullptr == pSecondParaShape)
 		return false;
 
-	CParagraphsStyle oFirstParagraphStyle {GenerateParagraphStyle(*pFirstParaShape )};
+	CParagraphsStyle oFirstParagraphStyle {GenerateParagraphStyle(*pFirstParaShape,  nFontHeight)};
 	CParagraphsStyle oSecondParagraphStyle{GenerateParagraphStyle(*pSecondParaShape, nFontHeight)};
 
 	oSecondParagraphStyle -= oFirstParagraphStyle;
