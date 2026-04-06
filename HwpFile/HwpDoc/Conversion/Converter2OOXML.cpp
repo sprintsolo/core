@@ -1230,6 +1230,46 @@ void CConverter2OOXML::WriteGeometryShape(const CCtrlGeneralShape* pGeneralShape
 
 	if (nullptr == pFill || pFill->NoneFill())
 		oBuilder.WriteString(L"<a:noFill/>");
+	else if (pFill->GradFill() && 0 != pFill->GetGradColorNum())
+	{
+		const std::vector<int> arColors = pFill->GetGradColors();
+		const int nColorCount = (int)arColors.size();
+
+		oBuilder.WriteString(L"<a:gradFill>");
+		oBuilder.WriteString(L"<a:gsLst>");
+
+		for (int i = 0; i < nColorCount; ++i)
+		{
+			int nPos = (nColorCount > 1) ? (i * 100000 / (nColorCount - 1)) : 0;
+			oBuilder.WriteString(L"<a:gs pos=\"" + std::to_wstring(nPos) + L"\"><a:srgbClr val=\"" + Transform::IntColorToHEX(arColors[i]) + L"\"/></a:gs>");
+		}
+
+		oBuilder.WriteString(L"</a:gsLst>");
+
+		switch (pFill->GetGradFillType())
+		{
+			case EGradFillType::RADIAL:
+			case EGradFillType::SQUARE:
+			{
+				int nLeft = pFill->GetGradCenterX() * 1000;
+				int nTop  = pFill->GetGradCenterY() * 1000;
+				std::wstring sPath = (pFill->GetGradFillType() == EGradFillType::RADIAL) ? L"circle" : L"rect";
+				oBuilder.WriteString(L"<a:path path=\"" + sPath + L"\"><a:fillToRect l=\"" + std::to_wstring(nLeft) + L"\" t=\"" + std::to_wstring(nTop) +
+					L"\" r=\"" + std::to_wstring(100000 - nLeft) + L"\" b=\"" + std::to_wstring(100000 - nTop) + L"\"/></a:path>");
+				break;
+			}
+			case EGradFillType::LINEAR:
+			case EGradFillType::CONICAL:
+			default:
+			{
+				int nAngle = pFill->GetGradAngle() * 60000;
+				oBuilder.WriteString(L"<a:lin ang=\"" + std::to_wstring(nAngle) + L"\" scaled=\"1\"/>");
+				break;
+			}
+		}
+
+		oBuilder.WriteString(L"</a:gradFill>");
+	}
 	else if (pFill->ColorFill())
 		oBuilder.WriteString(L"<a:solidFill><a:srgbClr val=\"" + Transform::IntColorToHEX(pFill->GetFaceColor()) + L"\"/></a:solidFill>");
 	else if (pFill->ImageFill())
@@ -1261,7 +1301,27 @@ void CConverter2OOXML::WriteGeometryShape(const CCtrlGeneralShape* pGeneralShape
 		oBuilder.WriteString(L"</w:txbxContent></wps:txbx>");
 	}
 
-	oBuilder.WriteString(L"<wps:bodyPr/>");
+	{
+		oBuilder.WriteString(L"<wps:bodyPr");
+
+		const int nLeft   = Transform::HWPUINT2OOXML(pGeneralShape->GetTextLeftSpace());
+		const int nRight  = Transform::HWPUINT2OOXML(pGeneralShape->GetTextRightSpace());
+		const int nTop    = Transform::HWPUINT2OOXML(pGeneralShape->GetTextTopSpace());
+		const int nBottom = Transform::HWPUINT2OOXML(pGeneralShape->GetTextBottomSpace());
+
+		if (0 != nLeft || 0 != nRight || 0 != nTop || 0 != nBottom)
+			oBuilder.WriteString(L" lIns=\"" + std::to_wstring(nLeft) + L"\" tIns=\"" + std::to_wstring(nTop) +
+				L"\" rIns=\"" + std::to_wstring(nRight) + L"\" bIns=\"" + std::to_wstring(nBottom) + L"\"");
+
+		switch (pGeneralShape->GetTextVerAlign())
+		{
+			case EVertAlign::CENTER: oBuilder.WriteString(L" anchor=\"ctr\""); break;
+			case EVertAlign::BOTTOM: oBuilder.WriteString(L" anchor=\"b\""); break;
+			default: break;
+		}
+
+		oBuilder.WriteString(L"/>");
+	}
 
 	oBuilder.WriteString(L"</wps:wsp></a:graphicData></a:graphic>");
 	CloseDrawingNode((nullptr != pContainer) ? pContainer : pGeneralShape, oBuilder);
@@ -1452,10 +1512,17 @@ void CConverter2OOXML::WritePicture(const CCtrlShapePic* pCtrlPic, short shParaS
 	oBuilder.WriteString(L"<pic:blipFill><a:blip r:embed=\"" + sPictureID + L"\">");
 
 	// Apply image effects (0=RealPic, 1=GrayScale, 2=BlackWhite)
-	if (1 == pCtrlPic->GetImageEffect() || 2 == pCtrlPic->GetImageEffect())
 	{
-		// Use both grayscl and duotone for broader renderer compatibility
-		oBuilder.WriteString(L"<a:duotone><a:prstClr val=\"black\"/><a:prstClr val=\"white\"/></a:duotone>");
+		const int nBright = pCtrlPic->GetImageBrightness();
+		const int nContrast = pCtrlPic->GetImageContrast();
+
+		if (0 != nBright || 0 != nContrast)
+			oBuilder.WriteString(L"<a:lum bright=\"" + std::to_wstring(nBright * 1000) + L"\" contrast=\"" + std::to_wstring(nContrast * 1000) + L"\"/>");
+
+		if (1 == pCtrlPic->GetImageEffect())
+			oBuilder.WriteString(L"<a:grayscl/>");
+		else if (2 == pCtrlPic->GetImageEffect())
+			oBuilder.WriteString(L"<a:duotone><a:prstClr val=\"black\"/><a:prstClr val=\"white\"/></a:duotone>");
 	}
 
 	oBuilder.WriteString(L"<a:extLst><a:ext uri=\"{28A0092B-C50C-407E-A947-70E740481C1C}\"><a14:useLocalDpi xmlns:a14=\"http://schemas.microsoft.com/office/drawing/2010/main\" val=\"0\"/></a:ext></a:extLst></a:blip><a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>");

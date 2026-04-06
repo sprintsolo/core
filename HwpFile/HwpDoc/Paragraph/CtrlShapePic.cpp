@@ -476,6 +476,16 @@ HWP_BYTE CCtrlShapePic::GetImageEffect() const
 	return m_chEffect;
 }
 
+int CCtrlShapePic::GetImageBrightness() const
+{
+	return (int)m_chBright;
+}
+
+int CCtrlShapePic::GetImageContrast() const
+{
+	return (int)m_chContrast;
+}
+
 int CCtrlShapePic::GetPicWidth() const
 {
 	return m_nIniPicWidth;

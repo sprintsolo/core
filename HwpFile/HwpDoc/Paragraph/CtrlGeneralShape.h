@@ -72,6 +72,12 @@ public:
 
 	const CFill* GetFill() const;
 
+	short GetTextLeftSpace() const;
+	short GetTextRightSpace() const;
+	short GetTextTopSpace() const;
+	short GetTextBottomSpace() const;
+	EVertAlign GetTextVerAlign() const;
+
 	ELineStyle2 GetLineStyle() const;
 	int GetLineColor() const;
 	int GetLineThick() const;

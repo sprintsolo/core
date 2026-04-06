@@ -217,6 +217,31 @@ const CFill* CCtrlGeneralShape::GetFill() const
 	return m_pFill;
 }
 
+short CCtrlGeneralShape::GetTextLeftSpace() const
+{
+	return m_shLeftSpace;
+}
+
+short CCtrlGeneralShape::GetTextRightSpace() const
+{
+	return m_shRightSpace;
+}
+
+short CCtrlGeneralShape::GetTextTopSpace() const
+{
+	return m_shTopSpace;
+}
+
+short CCtrlGeneralShape::GetTextBottomSpace() const
+{
+	return m_shBottomSpace;
+}
+
+EVertAlign CCtrlGeneralShape::GetTextVerAlign() const
+{
+	return m_eTextVerAlign;
+}
+
 ELineStyle2 CCtrlGeneralShape::GetLineStyle() const
 {
 	return m_eLineStyle;
