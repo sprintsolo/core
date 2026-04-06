@@ -130,7 +130,7 @@ std::wstring CStyleConverter::CreateStyle(short shParaShapeId, short shParaStyle
 	return wsStyleName;
 }
 
-bool CStyleConverter::WriteDifferenceParagraphStyles(short shFirtsParaShapeId, short shSecondParaShapeId, CWriterContext& oContext, NSStringUtils::CStringBuilder& oBuilder)
+bool CStyleConverter::WriteDifferenceParagraphStyles(short shFirtsParaShapeId, short shSecondParaShapeId, CWriterContext& oContext, NSStringUtils::CStringBuilder& oBuilder, int nFontHeight)
 {
 	const CHWPRecordParaShape* pFirstParaShape = dynamic_cast<const CHWPRecordParaShape*>(oContext.GetParaShape(shFirtsParaShapeId));
 
@@ -143,7 +143,7 @@ bool CStyleConverter::WriteDifferenceParagraphStyles(short shFirtsParaShapeId, s
 		return false;
 
 	CParagraphsStyle oFirstParagraphStyle {GenerateParagraphStyle(*pFirstParaShape )};
-	CParagraphsStyle oSecondParagraphStyle{GenerateParagraphStyle(*pSecondParaShape)};
+	CParagraphsStyle oSecondParagraphStyle{GenerateParagraphStyle(*pSecondParaShape, nFontHeight)};
 
 	oSecondParagraphStyle -= oFirstParagraphStyle;
 
@@ -197,7 +197,7 @@ std::wstring CStyleConverter::GenerateUniqueID(const std::wstring& wsName)
 	return wsName + std::to_wstring(++m_mUsedStyleNames[wsName]);
 }
 
-CParagraphsStyle CStyleConverter::GenerateParagraphStyle(const CHWPRecordParaShape& oParaShape)
+CParagraphsStyle CStyleConverter::GenerateParagraphStyle(const CHWPRecordParaShape& oParaShape, int nFontHeight)
 {
 	CParagraphsStyle oParagraphsStyle;
 
@@ -234,8 +234,21 @@ CParagraphsStyle CStyleConverter::GenerateParagraphStyle(const CHWPRecordParaSha
 	{
 		case 0x0:
 		{
-			oParagraphsStyle.SetSpacingLineRule(ELineRule::Auto);
-			oParagraphsStyle.SetSpacing(static_cast<int>(2.4 * (double)oParaShape.GetLineSpacing())); // 240 / 100
+			if (0 != nFontHeight)
+			{
+				// Use exact line spacing based on font size to match HWP rendering
+				// HWP percentage is relative to font em size, not Word's line metrics
+				// nFontHeight is in 1/100 pt (e.g., 2000 = 20pt)
+				// Result in twips (1/20 pt): fontHeight/100 * percentage/100 * 20
+				const int nExactTwips = static_cast<int>((double)nFontHeight * (double)oParaShape.GetLineSpacing() / 100.0 / 100.0 * 20.0);
+				oParagraphsStyle.SetSpacingLineRule(ELineRule::Exact);
+				oParagraphsStyle.SetSpacing(nExactTwips);
+			}
+			else
+			{
+				oParagraphsStyle.SetSpacingLineRule(ELineRule::Auto);
+				oParagraphsStyle.SetSpacing(static_cast<int>(2.4 * (double)oParaShape.GetLineSpacing())); // 240 / 100
+			}
 			break;
 		}
 		case 0x01:

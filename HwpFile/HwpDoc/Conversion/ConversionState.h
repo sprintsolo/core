@@ -45,6 +45,7 @@ struct TConversionState
 	unsigned short m_ushLastCharShapeId;
 	unsigned short m_ushSecdIndex;
 	unsigned int m_unParaIndex;
+	int m_nParaFontHeight; // Font height in HWP units (1/100 pt) for exact line spacing calculation
 
 	VECTOR<const CCtrlHeadFoot*> m_arCtrlsHeadFoot; //only for hwpx
 	std::stack<int> m_arOpenedBookmarks;
@@ -67,7 +68,7 @@ struct TConversionState
 	std::map<unsigned int, const CCtrlField*> m_mOpenField;
 
 	TConversionState()
-	    : m_bOpenedP(false), m_bOpenedR(false), m_bIsNote(false), m_bInTable(false), m_bInTextBox(false), m_ushLastCharShapeId(-1), m_ushSecdIndex(0), m_unParaIndex(0),
+	    : m_bOpenedP(false), m_bOpenedR(false), m_bIsNote(false), m_bInTable(false), m_bInTextBox(false), m_ushLastCharShapeId(-1), m_ushSecdIndex(0), m_unParaIndex(0), m_nParaFontHeight(0),
 	      m_pSectionDef(nullptr), m_pColumnDef(nullptr), m_pPageNum(nullptr), m_pNewNumber(nullptr), m_pRelationships(nullptr), m_eBreakType(EBreakType::None)
 	{}
 };

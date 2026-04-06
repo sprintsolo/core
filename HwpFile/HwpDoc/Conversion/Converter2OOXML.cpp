@@ -550,6 +550,25 @@ void CConverter2OOXML::WriteParagraph(const CHWPPargraph* pParagraph, NSStringUt
 
 	++oState.m_unParaIndex;
 
+	// Pre-scan paragraph to get the font height for exact line spacing calculation
+	oState.m_nParaFontHeight = 0;
+	if (nullptr != m_pContext)
+	{
+		for (const CCtrl* pCtrl : pParagraph->GetCtrls())
+		{
+			if (ECtrlObjectType::ParaText == pCtrl->GetCtrlType())
+			{
+				const int nCharShapeID = ((const CParaText*)pCtrl)->GetCharShapeID();
+				const CHWPRecordCharShape* pCharShape = dynamic_cast<const CHWPRecordCharShape*>(m_pContext->GetCharShape(nCharShapeID));
+				if (nullptr != pCharShape && 0 != pCharShape->GetHeight())
+				{
+					oState.m_nParaFontHeight = pCharShape->GetHeight();
+					break;
+				}
+			}
+		}
+	}
+
 	for (const CCtrl* pCtrl : pParagraph->GetCtrls())
 	{
 		switch (pCtrl->GetCtrlType())
@@ -651,7 +670,7 @@ void CConverter2OOXML::WriteParaShapeProperties(short shParaShapeID, short shPar
 		oBuilder.WriteString(L"<w:wordWrap w:val=\"1\"/>");
 
 	if (m_oStyleConverter.GetLastParaShapeId() != shParaShapeID)
-		m_oStyleConverter.WriteDifferenceParagraphStyles(m_oStyleConverter.GetLastParaShapeId(), shParaShapeID, *m_pContext, oBuilder);
+		m_oStyleConverter.WriteDifferenceParagraphStyles(m_oStyleConverter.GetLastParaShapeId(), shParaShapeID, *m_pContext, oBuilder, oState.m_nParaFontHeight);
 
 	const CHWPRecordParaShape* pParaShape= dynamic_cast<const CHWPRecordParaShape*>(m_pContext->GetParaShape(shParaShapeID));
 
